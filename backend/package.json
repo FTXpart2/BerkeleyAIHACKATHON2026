@@ -1,0 +1,15 @@
+{
+  "name": "@drunk-buddy/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "@drunk-buddy/channel": "workspace:*",
+    "@drunk-buddy/shared": "workspace:*",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "ioredis": "^5.4.1"
+  }
+}
