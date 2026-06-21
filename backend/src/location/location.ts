@@ -32,6 +32,22 @@ export async function resolveAndStoreLocation(
   return address;
 }
 
+// Forward-geocode an address string to coords (so the ride can use the EXACT
+// coordinate path — drops pins precisely, no autocomplete drift). null on miss.
+export async function geocode(query: string): Promise<{ lat: number; lon: number } | null> {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`,
+      { headers: { "User-Agent": "drunk-buddy/1.0" } },
+    );
+    if (!r.ok) return null;
+    const j = (await r.json()) as Array<{ lat: string; lon: string }>;
+    return j[0] ? { lat: Number(j[0].lat), lon: Number(j[0].lon) } : null;
+  } catch {
+    return null;
+  }
+}
+
 // POST /location — the watch page pushes the phone's live coordinates (same
 // signed health token as /vitals).
 export function createLocationHandler(store: Store) {

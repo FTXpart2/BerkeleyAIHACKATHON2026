@@ -3,7 +3,7 @@
 // deep links, ElevenLabs, the vitals sim, etc. without touching the agent.
 import { config } from "../config";
 import { log } from "../log";
-import { bookUber } from "../rides/uber";
+import { bookUber, type RidePlace } from "../rides/uber";
 import { orderEats } from "../food/ubereats";
 
 export interface AlertContact {
@@ -12,7 +12,14 @@ export interface AlertContact {
 }
 
 export interface Actions {
-  callRide(input: { phone: string; destination: string; pickup?: string; confirm?: boolean }): Promise<string>;
+  callRide(input: {
+    phone: string;
+    destination: string;
+    pickup?: string;
+    pickupPlace?: RidePlace;
+    dropPlace?: RidePlace;
+    confirm?: boolean;
+  }): Promise<string>;
   orderFood(input: { phone: string; query: string; confirm?: boolean }): Promise<string>;
   alertCircle(input: {
     phone: string;
@@ -65,7 +72,12 @@ export const browserbaseActions: Actions = {
   ...stubActions,
   async callRide(input) {
     try {
-      const quote = await bookUber(input.destination, { confirm: input.confirm, pickup: input.pickup });
+      const quote = await bookUber(input.destination, {
+        confirm: input.confirm,
+        pickup: input.pickup,
+        pickupPlace: input.pickupPlace,
+        dropPlace: input.dropPlace,
+      });
       const priceBit = quote.price ? `, ${quote.price}` : "";
       const etaBit = quote.eta ? `, ${quote.eta} out` : "";
       const details = `uberX to ${input.destination}${priceBit}${etaBit}`;

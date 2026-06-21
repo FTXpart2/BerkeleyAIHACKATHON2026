@@ -5,6 +5,7 @@ import type { Contacts } from "../contacts/contacts";
 import { config } from "../config";
 import { makeHealthToken } from "../vitals/link";
 import { classifyHr } from "../vitals/hr";
+import { geocode } from "../location/location";
 
 // Claude tool schema (brief §4). Each external tool is dispatched to the
 // Actions interface (stub now, real later). update_profile / set_party_mode /
@@ -175,10 +176,23 @@ export async function dispatchTool(
 
     case "call_ride": {
       const here = await store.getLocation(phone);
+      const destination = String(input.destination ?? "home");
+      // EXACT coordinate path when we have the live location: drop both pins by
+      // lat/lng (no reverse-geocode drift, no autocomplete mismatch). Only geocode
+      // the destination if we actually have a pickup to pair it with.
+      const pickupPlace = here
+        ? { latitude: here.lat, longitude: here.lon, addressLine1: here.address ?? "current location" }
+        : undefined;
+      const dropCoords = pickupPlace ? await geocode(destination) : null;
+      const dropPlace = dropCoords
+        ? { latitude: dropCoords.lat, longitude: dropCoords.lon, addressLine1: destination }
+        : undefined;
       return actions.callRide({
         phone,
-        destination: String(input.destination ?? "home"),
-        pickup: here?.address,
+        destination,
+        pickup: here?.address, // for the deep-link fallback
+        pickupPlace,
+        dropPlace,
         confirm: !!input.confirm,
       });
     }
