@@ -15,6 +15,7 @@ export interface Config {
   };
   publicUrl?: string;
   deepgramApiKey?: string;
+  elevenLabsApiKey?: string;
 }
 
 export const config: Config = {
@@ -30,4 +31,5 @@ export const config: Config = {
   },
   publicUrl: process.env.PUBLIC_URL,
   deepgramApiKey: process.env.DEEPGRAM_API_KEY || undefined,
+  elevenLabsApiKey: process.env.ELEVENLABS_API_KEY || undefined,
 };

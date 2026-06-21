@@ -94,6 +94,7 @@ if (config.deepgramApiKey && config.anthropicApiKey) {
       deepgramApiKey: config.deepgramApiKey!,
       anthropicApiKey: config.anthropicApiKey!,
       model: config.model,
+      elevenLabsApiKey: config.elevenLabsApiKey,
     });
 
     activeSessions.set(phone, session);

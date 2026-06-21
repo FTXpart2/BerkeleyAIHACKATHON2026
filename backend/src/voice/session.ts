@@ -14,6 +14,7 @@ export interface VoiceSessionDeps {
   deepgramApiKey: string;
   anthropicApiKey: string;
   model: string;
+  elevenLabsApiKey?: string;
 }
 
 export class VoiceSession {
@@ -27,7 +28,7 @@ export class VoiceSession {
   ) {}
 
   async init(): Promise<void> {
-    const { store, deepgramApiKey, anthropicApiKey, model } = this.deps;
+    const { store, deepgramApiKey, anthropicApiKey, model, elevenLabsApiKey } = this.deps;
     const phone = this.callerPhone;
 
     const [profile, friends, blocklist, party] = await Promise.all([
@@ -63,7 +64,15 @@ export class VoiceSession {
             prompt: systemPrompt,
             functions: getVoiceTools(),
           },
-          speak: { provider: { type: "deepgram", model: "aura-asteria-en" } },
+          speak: elevenLabsApiKey
+            ? {
+                provider: { type: "eleven_labs", model_id: "JBFqnCBsd6RMkjVDRZzb" },
+                endpoint: {
+                  url: "https://api.elevenlabs.io/v1",
+                  headers: { "xi-api-key": elevenLabsApiKey },
+                },
+              }
+            : { provider: { type: "deepgram", model: "aura-asteria-en" } },
         },
         greeting: "yo, what's up? everything ok?",
       });
