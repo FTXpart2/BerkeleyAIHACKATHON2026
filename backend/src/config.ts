@@ -9,6 +9,9 @@ export interface Config {
   port: number;
   anthropicApiKey?: string;
   model: string;
+  // Voice notes: Deepgram STT in + Aura TTS out (one key for both).
+  deepgramApiKey?: string;
+  ttsModel: string;
   redisUrl?: string;
   bluebubbles: {
     serverUrl?: string;
@@ -53,6 +56,8 @@ export const config: Config = {
   port: Number(process.env.PORT ?? 8787),
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || undefined,
   model: process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5",
+  deepgramApiKey: process.env.DEEPGRAM_API_KEY || undefined,
+  ttsModel: process.env.DEEPGRAM_TTS_MODEL || "aura-2-orion-en",
   redisUrl: process.env.REDIS_URL || undefined,
   bluebubbles: {
     serverUrl: process.env.BLUEBUBBLES_SERVER_URL,

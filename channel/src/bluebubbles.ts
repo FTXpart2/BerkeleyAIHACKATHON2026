@@ -17,6 +17,8 @@ export interface BlueBubblesConfig {
 export interface BlueBubblesChannel extends Channel {
   /** Express handler to mount at POST /imessage/incoming. */
   webhook(): RequestHandler;
+  /** Download an attachment's bytes by guid (e.g. an inbound voice note). */
+  downloadAttachment(guid: string): Promise<{ bytes: Buffer; mimeType?: string }>;
 }
 
 function tempGuid(): string {
@@ -79,7 +81,9 @@ export function createBlueBubblesChannel(config: BlueBubblesConfig): BlueBubbles
             // A pure location share's text IS the maps URL — surface it as a
             // location, don't feed the raw URL to the agent as a message.
             text: loc ? undefined : text,
-            attachment: att ? { name: att.transferName, mimeType: att.mimeType } : undefined,
+            attachment: att
+              ? { guid: att.guid, name: att.transferName, mimeType: att.mimeType }
+              : undefined,
             location: loc,
             raw: body,
           };
@@ -88,6 +92,16 @@ export function createBlueBubblesChannel(config: BlueBubblesConfig): BlueBubbles
           console.error("[bluebubbles] webhook error", err);
         }
       };
+    },
+    async downloadAttachment(guid) {
+      const res = await fetch(
+        `${base}/api/v1/attachment/${encodeURIComponent(guid)}/download?password=${pw}`,
+      );
+      if (!res.ok) {
+        throw new Error(`BlueBubbles attachment download -> ${res.status}: ${await res.text()}`);
+      }
+      const bytes = Buffer.from(await res.arrayBuffer());
+      return { bytes, mimeType: res.headers.get("content-type") ?? undefined };
     },
     async sendText(chatGuid, text) {
       // AppleScript sending on newer macOS is flaky — the same send sometimes throws

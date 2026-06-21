@@ -9,6 +9,10 @@ import { createGuardian } from "./vitals/guardian";
 import { createVitalsHandler } from "./vitals/ingest";
 import { watchPageHtml } from "./vitals/watch-page";
 import { createLocationHandler, resolveAndStoreLocation } from "./location/location";
+import { createStt } from "./voice/stt";
+import { createTts } from "./voice/tts";
+import { transcribeVoiceNote } from "./voice/bridge";
+import { unlink } from "node:fs/promises";
 import {
   createLocalChannel,
   createBlueBubblesChannel,
@@ -84,6 +88,10 @@ const guardian = createGuardian({
   },
 });
 
+// Voice notes: Deepgram transcribes inbound notes; Aura speaks the reply back.
+const stt = createStt(config.deepgramApiKey);
+const tts = createTts(config.deepgramApiKey, config.ttsModel);
+
 channel.onMessage(async (msg) => {
   await store.setChatGuid(msg.phone, msg.chatGuid);
   // They shared a "Send My Current Location" pin → store it as their live pickup,
@@ -98,12 +106,32 @@ channel.onMessage(async (msg) => {
     if (reply) await channel.sendText(msg.chatGuid, reply);
     return;
   }
-  if (!msg.text) {
-    await channel.sendText(msg.chatGuid, "can't hear voice notes yet — text me for now.");
+
+  // Voice note? Download + transcribe it, then treat it exactly like a text.
+  let text = msg.text;
+  let viaVoice = false;
+  if (!text && msg.attachment?.guid && bluebubbles) {
+    text = await transcribeVoiceNote(msg, { download: bluebubbles.downloadAttachment, stt });
+    viaVoice = true;
+  }
+  if (!text) {
+    await channel.sendText(msg.chatGuid, "couldn't make that out — say it again?");
     return;
   }
-  const reply = await handleInbound({ phone: msg.phone, text: msg.text }, deps);
-  if (reply) await channel.sendText(msg.chatGuid, reply);
+
+  const reply = await handleInbound({ phone: msg.phone, text }, deps);
+  if (!reply) return;
+
+  // Reply in kind: voice note in -> spoken reply out (fall back to text).
+  if (viaVoice) {
+    const mp3 = await tts.synthesize(reply);
+    if (mp3) {
+      await channel.sendAudio(msg.chatGuid, mp3);
+      await unlink(mp3).catch(() => {});
+      return;
+    }
+  }
+  await channel.sendText(msg.chatGuid, reply);
 });
 
 const app = express();
