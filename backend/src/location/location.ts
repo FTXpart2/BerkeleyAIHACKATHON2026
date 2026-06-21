@@ -56,7 +56,8 @@ function cleanAddress(a?: Record<string, string>): string | undefined {
   if (!a) return undefined;
   const street = [a.house_number, a.road].filter(Boolean).join(" ");
   const city = a.city || a.town || a.village || a.hamlet || a.suburb || a.neighbourhood;
-  const state = a["ISO3166-2-lvl4"]?.split("-")[1] || a.state; // "US-CA" -> "CA"
-  const out = [street, city, state].filter(Boolean).join(", ");
+  // street + city ONLY (no state / zip / country) — keep it short; the ride flow
+  // matches the autocomplete option by street number + name, so it stays precise.
+  const out = [street, city].filter(Boolean).join(", ");
   return out || undefined;
 }

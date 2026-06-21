@@ -258,10 +258,22 @@ async function fillLocationField(page: Page, value: string, label: string): Prom
   const options = page.getByRole("option");
   await options.first().waitFor({ state: "visible", timeout: 8_000 }).catch(() => {});
   await sleep(900); // let the debounce settle to the final typed string
+  // Click the option that best matches what we TYPED — the street number AND the
+  // street name (e.g. "1902" + "Henry") — not just the city, so we never grab a
+  // same-numbered street in another town. Fall back to city, then the first row.
+  const street = (value.split(",")[0] ?? "").trim();
+  const num = street.match(/^\d+/)?.[0] ?? "";
+  const word = street.replace(/^\d+\s*/, "").split(/\s+/)[0] ?? "";
   const city = value.split(",").map((s) => s.trim())[1] ?? "";
-  let target = city ? options.filter({ hasText: city }).first() : options.first();
-  if (!(await target.count().catch(() => 0))) target = options.first();
-  await target.click({ timeout: 8_000 }).catch(async () => {
+  let target = options;
+  if (num) target = target.filter({ hasText: num });
+  if (word) target = target.filter({ hasText: word });
+  let chosen = target.first();
+  if (!(await chosen.count().catch(() => 0))) {
+    chosen = city ? options.filter({ hasText: city }).first() : options.first();
+    if (!(await chosen.count().catch(() => 0))) chosen = options.first();
+  }
+  await chosen.click({ timeout: 8_000 }).catch(async () => {
     await page.keyboard.press("Enter").catch(() => {});
   });
   await sleep(2200);
