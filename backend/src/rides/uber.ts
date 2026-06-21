@@ -44,9 +44,12 @@ export async function bookUber(
   const { confirm = false, pickup } = opts;
   const link = uberDeepLink(destination, pickup);
 
-  // No Browserbase configured → still hand back a real one-tap deep link.
-  if (!config.browserbase.apiKey || !config.browserbase.projectId) {
-    return { ok: true, booked: false, link, note: "deep link only (browserbase off)" };
+  // Default to the instant, reliable one-tap deep link. The live browser
+  // automation (which reads an inline price) is slow + flaky against Uber's
+  // bot-hostile site, so it's opt-in via UBER_LIVE_QUOTE=true.
+  const LIVE_QUOTE = process.env.UBER_LIVE_QUOTE === "true";
+  if (!LIVE_QUOTE || !config.browserbase.apiKey || !config.browserbase.projectId) {
+    return { ok: true, booked: false, link, note: "deep link" };
   }
 
   const stagehand = new Stagehand({

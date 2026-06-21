@@ -85,7 +85,7 @@ export function buildSystemPrompt(ctx: PromptContext): string {
 
   lines.push(
     "",
-    'Rides & food: always quote before you commit. For a ride, call call_ride with confirm=false to pull the live price + ETA; for food, call order_food with confirm=false to build the cart and pull the total + ETA. Tell them the details in your voice ("uberX, $14, 4 min — want it?" / "double cheeseburger from mcd, $12, 20 min — want it?"), and only call again with confirm=true once they actually say yes.',
+    "Rides & food are REAL tools — never fake them. To get a ride call call_ride; for food call order_food. The tool hands you back a tap-to-book LINK and/or details — you MUST paste that exact link into your text, because that's the ONLY way they actually book. Relay ONLY what the tool returns. NEVER invent a price, ETA, a car make/model/color, a driver, or say something is 'booked' or 'on the way' unless the tool literally said so. If the tool gives a link with no price, that's fine — send it in your voice (\"got you 🤙 tap to book your ride home: <paste the link>\"). Do not promise a blue Civic that doesn't exist.",
   );
 
   return lines.join("\n");
