@@ -4,6 +4,7 @@
 import { config } from "../config";
 import { log } from "../log";
 import { bookUber } from "../rides/uber";
+import { orderEats } from "../food/ubereats";
 
 export interface AlertContact {
   name: string;
@@ -12,7 +13,7 @@ export interface AlertContact {
 
 export interface Actions {
   callRide(input: { phone: string; destination: string; confirm?: boolean }): Promise<string>;
-  orderFood(input: { phone: string; query: string }): Promise<string>;
+  orderFood(input: { phone: string; query: string; confirm?: boolean }): Promise<string>;
   alertCircle(input: {
     phone: string;
     reason: string;
@@ -34,8 +35,10 @@ export const stubActions: Actions = {
       ? `[stub] booked — uberX to ${destination}, blue Civic, 4 min out, $14.20`
       : `[stub] quote — uberX to ${destination}, $14.20, 4 min away (not booked; show them and ask to confirm)`;
   },
-  async orderFood({ query }) {
-    return `[stub] ordered ${query} — eta ~25 min`;
+  async orderFood({ query, confirm }) {
+    return confirm
+      ? `[stub] ordered — ${query} from Lucky's Diner, $18.40, ~25 min`
+      : `[stub] quote — ${query} from Lucky's Diner, $18.40, ~25 min (not ordered; show them and ask to confirm)`;
   },
   async alertCircle({ reason, location, contacts }) {
     const who = contacts.map((c) => c.name).join(", ") || "emergency contacts";
@@ -55,9 +58,9 @@ export const stubActions: Actions = {
   },
 };
 
-// Real edges: only callRide is wired to Browserbase so far; everything else
-// still delegates to the stub. Falls back to the stub if a booking throws so a
-// flaky browser session can never take down the agent (brief §4).
+// Real edges: callRide (Uber) and orderFood (Uber Eats) are wired to Browserbase;
+// everything else still delegates to the stub. Each falls back to the stub if the
+// browser session throws, so a flaky run can never take down the agent (brief §4).
 export const browserbaseActions: Actions = {
   ...stubActions,
   async callRide(input) {
@@ -76,6 +79,24 @@ export const browserbaseActions: Actions = {
     } catch (err) {
       log("ride.error", { err: String(err) });
       return stubActions.callRide(input);
+    }
+  },
+  async orderFood(input) {
+    try {
+      const quote = await orderEats(input.query, { confirm: input.confirm });
+      if (!quote.ok) {
+        log("food.fallback", { note: quote.note });
+        return stubActions.orderFood(input);
+      }
+      const details = `${quote.item ?? input.query}${quote.place ? ` from ${quote.place}` : ""}${
+        quote.total ? `, ${quote.total}` : ""
+      }${quote.eta ? `, ${quote.eta}` : ""}`;
+      return quote.ordered
+        ? `ordered — ${details}. on its way.`
+        : `quote — ${details}. not ordered yet; show them the details and ask if they want it.`;
+    } catch (err) {
+      log("food.error", { err: String(err) });
+      return stubActions.orderFood(input);
     }
   },
 };

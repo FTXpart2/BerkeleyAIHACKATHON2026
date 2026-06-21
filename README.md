@@ -72,6 +72,17 @@ One-time setup:
    the user says yes — so it never books a real car. Flip to `true` only once auth + payment
    are verified, so a flaky run can't sink the demo (§13).
 
+## Live food (Browserbase + Uber Eats)
+
+`order_food` drives Uber Eats the same way `call_ride` drives Uber — same `Actions` seam,
+same Browserbase Context (Uber Eats shares the Uber login, so one logged-in session covers
+both), same **quote → confirm** safety. The buddy builds the cart, texts "cheeseburger from
+Lucky's, $18, 25 min — want it?", and only places the order (`order_food confirm=true`) after
+a yes. A real order is placed only when the user confirmed AND `EATS_ORDER_FOR_REAL=true`.
+
+`pnpm food:test "a big greasy burger"` drives the flow in isolation; tune the `act()` prompts
+in `backend/src/food/ubereats.ts` against the live site (watch it in the session inspector).
+
 ## State
 
 In-memory by default. Set `REDIS_URL` to use Redis (sponsor) — no code change. Keys are

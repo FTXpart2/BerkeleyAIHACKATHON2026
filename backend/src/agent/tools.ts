@@ -66,10 +66,17 @@ export const TOOLS = [
   },
   {
     name: "order_food",
-    description: "Order food for the user.",
+    description:
+      "Order food for the user from Uber Eats. TWO STEPS like call_ride: first call with confirm=false to build the cart and pull a live total + ETA — show it and ask if they want it. Only after they say yes, call again with confirm=true to place the order. Never order without quoting and getting a yes first.",
     input_schema: {
       type: "object",
-      properties: { query: { type: "string" } },
+      properties: {
+        query: { type: "string", description: "what they want, e.g. 'a big greasy burger' or 'pad thai'" },
+        confirm: {
+          type: "boolean",
+          description: "false = just quote the total/ETA so you can ask them; true = they approved, place the order",
+        },
+      },
       required: ["query"],
     },
   },
@@ -153,7 +160,7 @@ export async function dispatchTool(
     }
 
     case "order_food":
-      return actions.orderFood({ phone, query: String(input.query ?? "") });
+      return actions.orderFood({ phone, query: String(input.query ?? ""), confirm: !!input.confirm });
 
     case "alert_circle": {
       const friends = await store.getFriends(phone);
