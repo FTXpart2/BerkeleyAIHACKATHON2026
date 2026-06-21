@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export type ChannelName = "local" | "bluebubbles" | "twilio";
+export type ChannelName = "local" | "bluebubbles" | "twilio" | "telegram";
 
 export interface Config {
   channel: ChannelName;
@@ -20,12 +20,16 @@ export interface Config {
     authToken?: string;
     fromNumber?: string;
   };
+  telegram: {
+    botToken?: string;
+  };
   publicUrl?: string;
 }
 
 function channelFrom(v?: string): ChannelName {
   if (v === "bluebubbles") return "bluebubbles";
   if (v === "twilio") return "twilio";
+  if (v === "telegram") return "telegram";
   return "local";
 }
 
@@ -44,6 +48,9 @@ export const config: Config = {
     accountSid: process.env.TWILIO_ACCOUNT_SID,
     authToken: process.env.TWILIO_AUTH_TOKEN,
     fromNumber: process.env.TWILIO_FROM_NUMBER,
+  },
+  telegram: {
+    botToken: process.env.TELEGRAM_BOT_TOKEN,
   },
   publicUrl: process.env.PUBLIC_URL,
 };

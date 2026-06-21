@@ -8,15 +8,16 @@ import {
   createLocalChannel,
   createBlueBubblesChannel,
   createTwilioChannel,
+  createTelegramChannel,
   type BlueBubblesChannel,
   type TwilioChannel,
 } from "@drunk-buddy/channel";
 import type { Channel } from "@drunk-buddy/shared";
 import { log } from "./log";
 
-// Entrypoint: serves the channel webhook (BlueBubbles or Twilio) or runs the local
-// terminal channel, and wires every inbound message through the agent loop. The agent
-// is identical regardless of channel — that's the point of the Channel interface.
+// Entrypoint: serves the channel webhook (BlueBubbles or Twilio) or runs a polling
+// channel (Telegram / local), and wires every inbound message through the agent loop.
+// The agent is identical regardless of channel — that's the point of the interface.
 const store = createStore();
 const llm = createLlm(config);
 const deps: Deps = { store, llm, actions: stubActions, maxSteps: 6 };
@@ -47,6 +48,12 @@ if (config.channel === "bluebubbles") {
     fromNumber: config.twilio.fromNumber,
   });
   channel = twilioCh;
+} else if (config.channel === "telegram") {
+  if (!config.telegram.botToken) {
+    log("config.error", { note: "CHANNEL=telegram but TELEGRAM_BOT_TOKEN not set" });
+    process.exit(1);
+  }
+  channel = createTelegramChannel({ botToken: config.telegram.botToken });
 } else {
   channel = createLocalChannel();
 }
