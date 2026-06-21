@@ -1,6 +1,7 @@
 import { chromium, type Browser, type Page } from "playwright-core";
 import Browserbase from "@browserbasehq/sdk";
 import { config } from "../config";
+import { acquireBrowserSlot } from "../rides/session-lock";
 import { log } from "../log";
 
 // Drive the REAL Uber Eats web app in a Browserbase cloud browser via raw
@@ -42,6 +43,9 @@ export async function orderEats(query: string): Promise<FoodQuote> {
     return { ok: true, ordered: false, item: query, link, note: "deep link" };
   }
 
+  // Serialize cloud-browser runs — Browserbase free tier allows only 1 at a time
+  // (shared with rides).
+  const releaseSlot = await acquireBrowserSlot();
   const bb = new Browserbase({ apiKey: config.browserbase.apiKey });
   let sessionId: string | undefined;
   let browser: Browser | undefined;
@@ -138,6 +142,7 @@ export async function orderEats(query: string): Promise<FoodQuote> {
         .update(sessionId, { projectId: config.browserbase.projectId!, status: "REQUEST_RELEASE" })
         .catch((e) => log("food.release_failed", { err: String(e) }));
     }
+    releaseSlot();
   }
 }
 

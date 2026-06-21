@@ -2,6 +2,7 @@ import { chromium, type Browser, type BrowserContext, type Page } from "playwrig
 import Browserbase from "@browserbasehq/sdk";
 import { config } from "../config";
 import { log } from "../log";
+import { acquireBrowserSlot } from "./session-lock";
 
 // Get the user a ride. Two layers: (1) drive the real Uber web app in a cloud
 // browser (Browserbase) to read a LIVE UberX price and (optionally) book, and
@@ -32,6 +33,11 @@ import { log } from "../log";
 // said yes) AND UBER_BOOK_FOR_REAL=true — and only if we actually read a price.
 
 const BOOK_FOR_REAL = process.env.UBER_BOOK_FOR_REAL === "true";
+
+// Cache live quotes briefly so a repeat (or a double-fired) call_ride returns
+// instantly instead of re-driving Uber for ~60-90s. Quotes only — booking never caches.
+const QUOTE_TTL_MS = 3 * 60 * 1000;
+const QUOTE_CACHE = new Map<string, { quote: RideQuote; at: number }>();
 
 const UBERX_RE = /uberx/i;
 const PRICE_RE = /\$\s?\d[\d,]*(?:\.\d{2})?/;
@@ -137,6 +143,19 @@ export async function bookUber(
     return { ok: true, booked: false, link, note: "deep link" };
   }
 
+  // Repeat (or double-fired) quote? hand back the cached one instantly — no slow
+  // re-run, no second Browserbase session. Booking (confirm=true) never caches.
+  const cacheKey = JSON.stringify({ destination, pickup, dropPlace, pickupPlace });
+  if (!confirm) {
+    const hit = QUOTE_CACHE.get(cacheKey);
+    if (hit && Date.now() - hit.at < QUOTE_TTL_MS) {
+      log("ride.cache_hit", { destination });
+      return hit.quote;
+    }
+  }
+
+  // Serialize cloud-browser runs — Browserbase free tier allows only 1 at a time.
+  const releaseSlot = await acquireBrowserSlot();
   const bb = new Browserbase({ apiKey: config.browserbase.apiKey });
 
   let sessionId: string | undefined;
@@ -215,7 +234,7 @@ export async function bookUber(
     }
 
     log("ride.quote", { destination, eta, price, booked: det.booked, driver: det.driver, car: det.car, plate: det.plate });
-    return {
+    const out: RideQuote = {
       ok: true,
       booked: det.booked,
       eta: det.eta ?? eta,
@@ -226,6 +245,8 @@ export async function bookUber(
       plate: det.plate,
       note: price ? undefined : "no price rendered — deep link fallback",
     };
+    if (!confirm && price) QUOTE_CACHE.set(cacheKey, { quote: out, at: Date.now() });
+    return out;
   } catch (err) {
     log("ride.error", { err: String(err) });
     return { ok: true, booked: false, link, note: "automation hiccup — deep link fallback" };
@@ -241,6 +262,7 @@ export async function bookUber(
         })
         .catch((e) => log("ride.release_failed", { err: String(e) }));
     }
+    releaseSlot();
   }
 }
 
