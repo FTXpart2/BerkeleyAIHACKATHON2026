@@ -83,6 +83,11 @@ export function createBlueBubblesChannel(config: BlueBubblesConfig): BlueBubbles
           if (i > 1) console.error(`[bluebubbles] send succeeded on attempt ${i}`);
           return;
         } catch (err) {
+          // A prior attempt may have timed out on our side but still QUEUED the
+          // message; BlueBubbles then 400s "already queued/sent" — that's a
+          // success, not a failure. Don't retry (would double-send) or throw.
+          const msg = String(err).toLowerCase();
+          if (msg.includes("already queued") || msg.includes("already sent")) return;
           lastErr = err;
           console.error(`[bluebubbles] send attempt ${i}/${attempts} failed, retrying…`);
           await new Promise((r) => setTimeout(r, 1500));
