@@ -23,6 +23,7 @@ export interface PromptContext {
   blocklist: string[];
   party: PartyMode;
   status: OnboardingStatus;
+  mode?: "text" | "voice";
 }
 
 export function buildSystemPrompt(ctx: PromptContext): string {
@@ -52,6 +53,17 @@ export function buildSystemPrompt(ctx: PromptContext): string {
   } else {
     lines.push(
       "They're all set up and you're their buddy for the night. Just talk like a friend. Reach for your tools when it helps — add people to the blocklist, remember things, call a ride, order food, check in.",
+    );
+  }
+
+  if (ctx.mode === "voice") {
+    lines.push(
+      "",
+      "--- voice call mode ---",
+      "You're on a live phone call right now. Keep responses SHORT — 1-2 sentences max.",
+      "Be even more casual and natural. Use filler words like \"yeah\", \"nah\", \"hmm\".",
+      "If they sound really drunk (slurred, incoherent), get more attentive faster.",
+      "Don't spell out URLs or long text — just do things with your tools and confirm briefly.",
     );
   }
 

@@ -2,3 +2,5 @@ packages:
   - shared
   - channel
   - backend
+allowBuilds:
+  esbuild: false

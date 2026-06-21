@@ -14,6 +14,7 @@ export interface Config {
     method: "apple-script" | "private-api";
   };
   publicUrl?: string;
+  deepgramApiKey?: string;
 }
 
 export const config: Config = {
@@ -28,4 +29,5 @@ export const config: Config = {
     method: process.env.BLUEBUBBLES_METHOD === "private-api" ? "private-api" : "apple-script",
   },
   publicUrl: process.env.PUBLIC_URL,
+  deepgramApiKey: process.env.DEEPGRAM_API_KEY || undefined,
 };

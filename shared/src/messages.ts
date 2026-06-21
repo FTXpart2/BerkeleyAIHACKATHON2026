@@ -7,6 +7,7 @@ export interface InboundAttachment {
   url?: string;
   mimeType?: string;
   name?: string;
+  guid?: string;
 }
 
 export interface InboundMessage {

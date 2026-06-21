@@ -17,6 +17,7 @@ export interface BlueBubblesConfig {
 export interface BlueBubblesChannel extends Channel {
   /** Express handler to mount at POST /imessage/incoming. */
   webhook(): RequestHandler;
+  downloadAttachment(guid: string): Promise<Buffer>;
 }
 
 function tempGuid(): string {
@@ -61,7 +62,9 @@ export function createBlueBubblesChannel(config: BlueBubblesConfig): BlueBubbles
             phone,
             chatGuid,
             text,
-            attachment: att ? { name: att.transferName, mimeType: att.mimeType } : undefined,
+            attachment: att
+              ? { name: att.transferName, mimeType: att.mimeType, guid: att.guid }
+              : undefined,
             raw: body,
           };
           if (phone && handler) await handler(msg);
@@ -90,6 +93,15 @@ export function createBlueBubblesChannel(config: BlueBubblesConfig): BlueBubbles
       if (!res.ok) {
         throw new Error(`BlueBubbles attachment -> ${res.status}: ${await res.text()}`);
       }
+    },
+    async downloadAttachment(guid: string): Promise<Buffer> {
+      const res = await fetch(
+        `${base}/api/v1/attachment/${encodeURIComponent(guid)}/download?password=${pw}`,
+      );
+      if (!res.ok) {
+        throw new Error(`BlueBubbles attachment download -> ${res.status}: ${await res.text()}`);
+      }
+      return Buffer.from(await res.arrayBuffer());
     },
     async start() {
       // no-op: the webhook handler is mounted by the backend server.
