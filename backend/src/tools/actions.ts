@@ -67,15 +67,22 @@ export const browserbaseActions: Actions = {
     try {
       const quote = await bookUber(input.destination, { confirm: input.confirm, pickup: input.pickup });
       const priceBit = quote.price ? `, ${quote.price}` : "";
-      const etaBit = quote.eta ? `, ${quote.eta} away` : "";
+      const etaBit = quote.eta ? `, ${quote.eta} out` : "";
       const details = `uberX to ${input.destination}${priceBit}${etaBit}`;
-      if (quote.booked) return `booked — ${details}. it's on the way.`;
-      if (quote.link) {
-        return quote.price
-          ? `${details} — tap to book: ${quote.link}`
-          : `your uber to ${input.destination} is ready — tap to book (it opens to your location): ${quote.link}`;
+      // Booked it for real (confirm + UBER_BOOK_FOR_REAL + a real price were all true).
+      if (quote.booked) return `booked ${details}. your driver's on the way — check your uber app.`;
+      // They said yes, but auto-book is off (or it fell back) — hand the pre-filled link to confirm in their app.
+      if (input.confirm) {
+        return quote.link
+          ? `ok — opening your uber to confirm${quote.price ? ` (${quote.price})` : ""}: ${quote.link}`
+          : "tap it in your uber app to confirm — couldn't auto-book just now.";
       }
-      return `quote — ${details}. ask them if they want it.`;
+      // Live price read — ask them to confirm; on "yes" the agent re-calls with confirm=true.
+      if (quote.price) return `${details}. want me to book it?`;
+      // No live price — hand the reliable pre-filled link instead.
+      return quote.link
+        ? `your uber to ${input.destination} is ready — tap to book (opens to your spot): ${quote.link}`
+        : `couldn't pull a price just now — want me to try again?`;
     } catch (err) {
       log("ride.error", { err: String(err) });
       return stubActions.callRide(input);
