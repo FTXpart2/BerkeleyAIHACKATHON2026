@@ -30,12 +30,16 @@ export function HowItWorks() {
         </div>
 
         <div className="mt-14 grid gap-8 md:grid-cols-3">
-          {steps.map((step) => (
-            <div key={step.n} className="rounded-3xl border border-border bg-card p-7 shadow-sm">
+          {steps.map((step, i) => (
+            <Reveal
+              key={step.n}
+              delay={i * 120}
+              className="rounded-3xl border border-border bg-card p-7 shadow-sm"
+            >
               <span className="font-serif text-4xl text-accent">{step.n}</span>
               <h3 className="mt-4 text-xl font-semibold tracking-tight">{step.title}</h3>
               <p className="mt-2 text-pretty leading-relaxed text-muted-foreground">{step.body}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

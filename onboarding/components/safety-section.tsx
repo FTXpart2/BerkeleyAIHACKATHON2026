@@ -1,4 +1,5 @@
 import { Lock, EyeOff, UserCheck, Trash2 } from "lucide-react"
+import { Reveal } from "@/components/reveal"
 
 const points = [
   {
@@ -40,8 +41,12 @@ export function SafetySection() {
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            {points.map(({ icon: Icon, title, body }) => (
-              <div key={title} className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+            {points.map(({ icon: Icon, title, body }, i) => (
+              <Reveal
+                key={title}
+                delay={i * 110}
+                className="rounded-3xl border border-border bg-card p-6 shadow-sm"
+              >
                 <span className="flex size-10 items-center justify-center rounded-full bg-accent/15 text-accent">
                   <Icon className="size-5" />
                 </span>
@@ -50,7 +55,7 @@ export function SafetySection() {
                   className="mt-2 text-pretty leading-relaxed text-muted-foreground"
                   dangerouslySetInnerHTML={{ __html: body }}
                 />
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
