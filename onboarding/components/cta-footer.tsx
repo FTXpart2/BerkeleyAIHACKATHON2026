@@ -45,21 +45,13 @@ const footerLinks = [
     heading: "Product",
     links: ["How it works", "What it does", "Safety"],
   },
-  {
-    heading: "Company",
-    links: ["About", "Careers", "Press", "Contact"],
-  },
-  {
-    heading: "Legal",
-    links: ["Privacy", "Terms", "Data & deletion", "Status"],
-  },
 ]
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+        <div className="grid gap-10 md:grid-cols-[1.5fr_1fr]">
           <div>
             <Link href="#" className="flex items-center gap-2">
               <span className="flex size-8 items-center justify-center rounded-full bg-foreground text-background">
