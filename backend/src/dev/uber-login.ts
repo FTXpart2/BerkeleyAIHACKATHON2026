@@ -27,7 +27,7 @@ async function main() {
     console.error("Couldn't create Browserbase context:", res.status, await res.text());
     process.exit(1);
   }
-  const contextId = (await res.json()).id as string;
+  const contextId = ((await res.json()) as { id: string }).id;
   console.log("\ncreated Browserbase context:", contextId);
 
   // 2) open Uber in a cloud browser bound to that context (persist=true saves login)
