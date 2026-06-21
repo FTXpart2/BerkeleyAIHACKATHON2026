@@ -2,7 +2,7 @@ import express from "express";
 import { config } from "./config";
 import { createStore } from "./store";
 import { createLlm } from "./agent/llm";
-import { stubActions } from "./tools/actions";
+import { pickActions } from "./tools/actions";
 import { createContacts } from "./contacts/contacts";
 import { handleInbound, type Deps } from "./agent/loop";
 import { createGuardian } from "./vitals/guardian";
@@ -69,7 +69,7 @@ const notifyContact = async (number: string, text: string): Promise<void> => {
   else if (twilioCh) await twilioCh.sendText(number, text);
   else log("notify.skip", { number, note: `channel '${channel.name}' can't text external numbers` });
 };
-const deps: Deps = { store, llm, actions: stubActions, contacts, notifyContact, maxSteps: 6 };
+const deps: Deps = { store, llm, actions: pickActions(), contacts, notifyContact, maxSteps: 6 };
 
 // The guardian reaches the user out of band (heart-rate check-in / escalation),
 // so it needs where to text them (persisted chatGuid) and how (the channel).

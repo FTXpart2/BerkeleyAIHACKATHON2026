@@ -1,7 +1,7 @@
 import { config } from "../config";
 import { createStore } from "../store";
 import { createLlm } from "../agent/llm";
-import { stubActions } from "../tools/actions";
+import { pickActions } from "../tools/actions";
 import { createContacts } from "../contacts/contacts";
 import { handleInbound, type Deps } from "../agent/loop";
 import { createLocalChannel } from "@drunk-buddy/channel";
@@ -14,7 +14,7 @@ const contacts = createContacts(config);
 const deps: Deps = {
   store,
   llm,
-  actions: stubActions,
+  actions: pickActions(),
   contacts,
   notifyContact: async (number, text) => console.error(`\n[alert → ${number}] ${text}\n`),
   maxSteps: 6,

@@ -54,19 +54,33 @@ export const TOOLS = [
   },
   {
     name: "call_ride",
-    description: "Book a ride to get the user somewhere (usually home). Just do it.",
+    description:
+      "Get the user a ride (usually home). Call with confirm=false FIRST to pull a live price + ETA quote; tell them in your voice, and only call again with confirm=true once they say yes.",
     input_schema: {
       type: "object",
-      properties: { destination: { type: "string" } },
+      properties: {
+        destination: { type: "string" },
+        confirm: {
+          type: "boolean",
+          description: "false = just quote; true = actually book (only after they said yes)",
+        },
+      },
       required: ["destination"],
     },
   },
   {
     name: "order_food",
-    description: "Order food for the user.",
+    description:
+      "Get the user food. Call with confirm=false FIRST to build the cart and pull the total + ETA; tell them in your voice, and only call again with confirm=true once they say yes.",
     input_schema: {
       type: "object",
-      properties: { query: { type: "string" } },
+      properties: {
+        query: { type: "string" },
+        confirm: {
+          type: "boolean",
+          description: "false = just quote; true = actually order (only after they said yes)",
+        },
+      },
       required: ["query"],
     },
   },
@@ -160,10 +174,18 @@ export async function dispatchTool(
     }
 
     case "call_ride":
-      return actions.callRide({ phone, destination: String(input.destination ?? "home") });
+      return actions.callRide({
+        phone,
+        destination: String(input.destination ?? "home"),
+        confirm: !!input.confirm,
+      });
 
     case "order_food":
-      return actions.orderFood({ phone, query: String(input.query ?? "") });
+      return actions.orderFood({
+        phone,
+        query: String(input.query ?? ""),
+        confirm: !!input.confirm,
+      });
 
     case "alert_circle": {
       const friends = await store.getFriends(phone);
