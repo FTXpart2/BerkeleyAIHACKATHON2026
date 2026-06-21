@@ -4,7 +4,6 @@ import { FitsSection } from "@/components/fits-section"
 import { Features } from "@/components/features"
 import { HowItWorks } from "@/components/how-it-works"
 import { SafetySection } from "@/components/safety-section"
-import { Pricing } from "@/components/pricing"
 import { FinalCta, SiteFooter } from "@/components/cta-footer"
 import GradualBlur from "@/components/GradualBlur"
 
@@ -18,7 +17,6 @@ export default function Page() {
         <Features />
         <HowItWorks />
         <SafetySection />
-        <Pricing />
         <FinalCta />
       </main>
       <SiteFooter />

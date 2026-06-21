@@ -43,7 +43,7 @@ export function FinalCta() {
 const footerLinks = [
   {
     heading: "Product",
-    links: ["How it works", "What it does", "Pricing", "Safety"],
+    links: ["How it works", "What it does", "Safety"],
   },
   {
     heading: "Company",

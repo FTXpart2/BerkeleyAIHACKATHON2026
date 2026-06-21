@@ -6,7 +6,6 @@ const nav = [
   { label: "How it works", href: "#how" },
   { label: "What it does", href: "#features" },
   { label: "Safety", href: "#safety" },
-  { label: "Pricing", href: "#pricing" },
 ]
 
 export function SiteHeader() {

@@ -1,3 +1,5 @@
+import { Reveal } from "@/components/reveal"
+
 const steps = [
   {
     n: "01",
