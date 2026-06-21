@@ -72,15 +72,11 @@ export const TOOLS = [
   {
     name: "order_food",
     description:
-      "Get the user food. Call with confirm=false FIRST to build the cart and pull the total + ETA; tell them in your voice, and only call again with confirm=true once they say yes.",
+      "Get the user food when they're hungry. Pass their craving (e.g. 'pizza', 'tacos', 'mcdonalds'). It finds an OPEN spot near them and returns the place + ETA + a tap-to-order link. Relay it warmly in your voice — they tap the link to confirm + pay.",
     input_schema: {
       type: "object",
       properties: {
-        query: { type: "string" },
-        confirm: {
-          type: "boolean",
-          description: "false = just quote; true = actually order (only after they said yes)",
-        },
+        query: { type: "string", description: "what they're craving" },
       },
       required: ["query"],
     },

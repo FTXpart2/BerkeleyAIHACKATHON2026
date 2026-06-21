@@ -109,17 +109,20 @@ export const browserbaseActions: Actions = {
   },
   async orderFood(input) {
     try {
-      const quote = await orderEats(input.query, { confirm: input.confirm });
+      // One-step: find an OPEN spot near them + hand a tap-to-order link (the user
+      // confirms + pays in their own app — we never auto-charge for food).
+      const quote = await orderEats(input.query);
       if (!quote.ok) {
         log("food.fallback", { note: quote.note });
         return stubActions.orderFood(input);
       }
-      const details = `${quote.item ?? input.query}${quote.place ? ` from ${quote.place}` : ""}${
-        quote.total ? `, ${quote.total}` : ""
-      }${quote.eta ? `, ${quote.eta}` : ""}`;
-      return quote.ordered
-        ? `ordered — ${details}. on its way.`
-        : `quote — ${details}. not ordered yet; show them the details and ask if they want it.`;
+      const eta = quote.eta ? `, ~${quote.eta}` : "";
+      if (quote.place) {
+        return `found you ${quote.place}${eta} — tap to order + pay: ${quote.link}`;
+      }
+      return quote.link
+        ? `here's uber eats for ${input.query} — tap to order: ${quote.link}`
+        : stubActions.orderFood(input);
     } catch (err) {
       log("food.error", { err: String(err) });
       return stubActions.orderFood(input);
