@@ -1,7 +1,7 @@
 import { config } from "../config";
 import { createStore } from "../store";
 import { createLlm } from "../agent/llm";
-import { stubActions } from "../tools/actions";
+import { pickActions } from "../tools/actions";
 import { handleInbound, type Deps } from "../agent/loop";
 import { createLocalChannel } from "@drunk-buddy/channel";
 
@@ -9,7 +9,7 @@ import { createLocalChannel } from "@drunk-buddy/channel";
 // channel so you can run the whole loop without the Mac gateway.
 const store = createStore();
 const llm = createLlm(config);
-const deps: Deps = { store, llm, actions: stubActions, maxSteps: 6 };
+const deps: Deps = { store, llm, actions: pickActions(), maxSteps: 6 };
 
 const channel = createLocalChannel();
 channel.onMessage(async (msg) => {

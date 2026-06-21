@@ -1,6 +1,9 @@
 // External real-world actions sit behind this interface (brief §5: "mock the
 // edges, nail the spine"). Phase 1 ships stubs; Phase 2/3 swap in Browserbase,
 // deep links, ElevenLabs, the vitals sim, etc. without touching the agent.
+import { config } from "../config";
+import { log } from "../log";
+import { bookUber } from "../rides/uber";
 
 export interface AlertContact {
   name: string;
@@ -49,3 +52,32 @@ export const stubActions: Actions = {
     return "[stub] hr 78, hrv 55, moving around — looks normal";
   },
 };
+
+// Real edges: only callRide is wired to Browserbase so far; everything else
+// still delegates to the stub. Falls back to the stub if a booking throws so a
+// flaky browser session can never take down the agent (brief §4).
+export const browserbaseActions: Actions = {
+  ...stubActions,
+  async callRide(input) {
+    try {
+      const quote = await bookUber(input.destination);
+      if (!quote.ok) {
+        log("ride.fallback", { note: quote.note });
+        return stubActions.callRide(input);
+      }
+      const verb = quote.booked ? "uber's on the way" : "got you a quote — uber's";
+      return `${verb} ${quote.eta ?? "a few min"} out to ${input.destination}${
+        quote.price ? ` (${quote.price})` : ""
+      }. drink some water ok?`;
+    } catch (err) {
+      log("ride.error", { err: String(err) });
+      return stubActions.callRide(input);
+    }
+  },
+};
+
+// Choose the live edges when Browserbase is configured, else the safe stub.
+// Used by every entrypoint so behavior is identical across dev/smoke/server.
+export function pickActions(): Actions {
+  return config.browserbase.apiKey ? browserbaseActions : stubActions;
+}

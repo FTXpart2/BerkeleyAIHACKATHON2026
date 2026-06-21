@@ -47,6 +47,25 @@ The agent runs anywhere; iMessage delivery needs a Mac gateway. One-time setup:
 `apple-script` send method works without the Private API; switch to `private-api` only if
 you want effects/tapbacks/native audio bubbles.
 
+## Live rides (Browserbase + Uber)
+
+`call_ride` drives the Uber web app in a Browserbase cloud browser via Stagehand. It's
+hidden behind the `Actions` interface — when `BROWSERBASE_API_KEY` is unset the agent falls
+back to the stub, so dev/smoke/tests are unaffected.
+
+One-time setup:
+
+1. Sign up at [browserbase.com], grab `BROWSERBASE_API_KEY` + `BROWSERBASE_PROJECT_ID`.
+2. **Log into Uber once, by hand, and persist it as a Context** (so there's no OTP at
+   runtime): create a Browserbase Context, open a session with it, sign into a *dedicated
+   test* Uber account (with a saved payment method) in the live session view, then put that
+   context id in `BROWSERBASE_CONTEXT_ID`.
+3. `pnpm ride:test "1 Telegraph Ave, Berkeley"` — drives the flow in isolation and prints
+   the quote. Watch it live in the Browserbase session inspector and tune the `act()`
+   prompts in `backend/src/rides/uber.ts` against the live site.
+4. `UBER_BOOK_FOR_REAL=false` (default) stops at the quote — it does **not** book. Flip to
+   `true` only once auth + payment are verified, so a flaky run can't sink the demo (§13).
+
 ## State
 
 In-memory by default. Set `REDIS_URL` to use Redis (sponsor) — no code change. Keys are

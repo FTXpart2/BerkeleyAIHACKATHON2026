@@ -13,6 +13,13 @@ export interface Config {
     password?: string;
     method: "apple-script" | "private-api";
   };
+  browserbase: {
+    apiKey?: string;
+    projectId?: string;
+    // a Browserbase Context that already holds a logged-in Uber session, so
+    // callRide skips OTP at runtime. See README "Live rides" runbook.
+    contextId?: string;
+  };
   publicUrl?: string;
 }
 
@@ -26,6 +33,11 @@ export const config: Config = {
     serverUrl: process.env.BLUEBUBBLES_SERVER_URL,
     password: process.env.BLUEBUBBLES_PASSWORD,
     method: process.env.BLUEBUBBLES_METHOD === "private-api" ? "private-api" : "apple-script",
+  },
+  browserbase: {
+    apiKey: process.env.BROWSERBASE_API_KEY || undefined,
+    projectId: process.env.BROWSERBASE_PROJECT_ID || undefined,
+    contextId: process.env.BROWSERBASE_CONTEXT_ID || undefined,
   },
   publicUrl: process.env.PUBLIC_URL,
 };

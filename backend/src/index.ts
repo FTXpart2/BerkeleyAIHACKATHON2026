@@ -2,7 +2,7 @@ import express from "express";
 import { config } from "./config";
 import { createStore } from "./store";
 import { createLlm } from "./agent/llm";
-import { stubActions } from "./tools/actions";
+import { pickActions } from "./tools/actions";
 import { handleInbound, type Deps } from "./agent/loop";
 import { createLocalChannel, createBlueBubblesChannel, type BlueBubblesChannel } from "@drunk-buddy/channel";
 import type { Channel } from "@drunk-buddy/shared";
@@ -12,7 +12,7 @@ import { log } from "./log";
 // channel) and wires every inbound message through the agent loop.
 const store = createStore();
 const llm = createLlm(config);
-const deps: Deps = { store, llm, actions: stubActions, maxSteps: 6 };
+const deps: Deps = { store, llm, actions: pickActions(), maxSteps: 6 };
 
 let channel: Channel;
 let bluebubbles: BlueBubblesChannel | null = null;

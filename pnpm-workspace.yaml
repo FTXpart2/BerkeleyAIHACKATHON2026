@@ -2,3 +2,15 @@ packages:
   - shared
   - channel
   - backend
+
+# node_modules is already installed; don't re-verify deps before running scripts
+# (a recent lockfile entry trips the minimumReleaseAge supply-chain policy).
+verifyDepsBeforeRun: false
+
+# Build scripts: esbuild powers tsx so it must run; the rest are optional native
+# speedups / unused LLM providers (we use Anthropic), so they stay off.
+allowBuilds:
+  esbuild: true
+  bufferutil: false
+  protobufjs: false
+  '@google/genai': false

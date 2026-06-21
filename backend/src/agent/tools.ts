@@ -136,8 +136,14 @@ export async function dispatchTool(
       return active ? "party mode ON — watching over them" : "party mode off";
     }
 
-    case "call_ride":
-      return actions.callRide({ phone, destination: String(input.destination ?? "home") });
+    case "call_ride": {
+      // Uber needs a real address, not the literal "home" — resolve it.
+      let destination = String(input.destination ?? "home");
+      if (/^home$/i.test(destination.trim())) {
+        destination = (await store.getProfile(phone))?.home_address ?? destination;
+      }
+      return actions.callRide({ phone, destination });
+    }
 
     case "order_food":
       return actions.orderFood({ phone, query: String(input.query ?? "") });
