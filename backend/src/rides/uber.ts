@@ -392,30 +392,29 @@ const BOOKED_RE = /finding|matching|arriving|on the way|driver is|your driver|re
  *  actually dispatch the ride. Screenshots each step to /tmp so a failed booking
  *  is debuggable (this clicks a REAL request button — gated by UBER_BOOK_FOR_REAL). */
 async function requestRide(page: Page): Promise<boolean> {
-  // Select the UberX row (it's a button/list-item with the "UberX" label).
-  await page
-    .getByRole("button")
-    .filter({ hasText: UBERX_RE })
-    .or(page.getByText(UBERX_RE))
-    .first()
-    .click({ timeout: 6_000 })
-    .catch(() => {});
-  await sleep(1500);
-  await page.screenshot({ path: "/tmp/book-1.png" }).catch(() => {});
-
-  // Uber's confirm can be 1–2 steps (Request UberX -> Confirm pickup/payment).
-  for (let step = 0; step < 3; step++) {
+  // UberX is pre-selected (the bottom button reads "Request UberX"), so DON'T
+  // click the option rows or the price — that opens the "Price Breakdown" modal
+  // and blocks the button. Just dismiss any modal and click Request, then handle
+  // a follow-up Confirm (pickup/payment) step. Screenshots each pass for debugging.
+  for (let step = 0; step < 4; step++) {
     if (await page.getByText(BOOKED_RE).first().isVisible().catch(() => false)) return true;
+    await page.keyboard.press("Escape").catch(() => {});
+    await page
+      .getByRole("button", { name: /^close$/i })
+      .first()
+      .click({ timeout: 1_500 })
+      .catch(() => {});
+    await page.screenshot({ path: `/tmp/book-${step}.png` }).catch(() => {});
     const btn = page
-      .getByRole("button", { name: /^(request|confirm|choose uberx|request uberx|book|continue|done)/i })
+      .getByRole("button", { name: /^request\b/i })
+      .or(page.getByRole("button", { name: /^confirm/i }))
       .first();
     const clicked = await btn
       .click({ timeout: 6_000 })
       .then(() => true)
       .catch(() => false);
-    await sleep(3_000);
-    await page.screenshot({ path: `/tmp/book-2-${step}.png` }).catch(() => {});
-    if (!clicked) break;
+    await sleep(3_500);
+    if (!clicked && step > 0) break;
   }
 
   // Confirm the ride actually dispatched (driver/arriving copy appears).
