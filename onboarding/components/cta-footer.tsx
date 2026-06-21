@@ -33,7 +33,7 @@ export function FinalCta() {
           </Button>
         </div>
         <p className="mt-4 text-sm text-muted-foreground">
-          Free to start · No download · Cancel by texting “bye” 👋
+          Free to start · No download 👋
         </p>
       </div>
     </section>
