@@ -6,7 +6,7 @@ import type {
   MemoryItem,
   ChatMessage,
 } from "@drunk-buddy/shared";
-import { type Store, VITALS_CAP, CONVO_CAP } from "./store";
+import { type Store, VITALS_CAP, CONVO_CAP, upsertFriend } from "./store";
 
 // In-memory Store — zero setup, used when REDIS_URL is not set.
 export class MemoryStore implements Store {
@@ -31,7 +31,7 @@ export class MemoryStore implements Store {
   }
   async addFriend(phone: string, friend: Friend) {
     const arr = this.friends.get(phone) ?? [];
-    arr.push(friend);
+    upsertFriend(arr, friend);
     this.friends.set(phone, arr);
   }
 

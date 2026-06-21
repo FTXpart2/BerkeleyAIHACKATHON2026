@@ -37,3 +37,17 @@ export interface Store {
 
 export const VITALS_CAP = 50;
 export const CONVO_CAP = 20;
+
+// Idempotent add: the agent often re-saves an already-known contact, which used
+// to append a duplicate (and would double-alert in an emergency). Match on phone
+// when both have one, else on name (case-insensitive); update in place if found.
+export function upsertFriend(friends: Friend[], friend: Friend): Friend[] {
+  const sameContact = (a: Friend, b: Friend) =>
+    a.phone && b.phone
+      ? a.phone === b.phone
+      : a.name.trim().toLowerCase() === b.name.trim().toLowerCase();
+  const idx = friends.findIndex((f) => sameContact(f, friend));
+  if (idx >= 0) friends[idx] = friend;
+  else friends.push(friend);
+  return friends;
+}

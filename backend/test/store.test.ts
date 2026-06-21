@@ -17,6 +17,24 @@ describe("MemoryStore", () => {
     expect(await s.getBlocklist("+1")).toEqual(["jordan"]);
   });
 
+  it("does not duplicate a re-saved emergency contact", async () => {
+    const s = new MemoryStore();
+    // the agent often re-saves the same contact across turns
+    await s.addFriend("+1", { name: "Sam", phone: "+2", is_emergency: true });
+    await s.addFriend("+1", { name: "Sam", phone: "+2", is_emergency: true });
+    const friends = await s.getFriends("+1");
+    expect(friends).toHaveLength(1);
+  });
+
+  it("updates a contact in place when re-saved with the same phone", async () => {
+    const s = new MemoryStore();
+    await s.addFriend("+1", { name: "Sam", phone: "+2", is_emergency: false });
+    await s.addFriend("+1", { name: "Samuel", phone: "+2", is_emergency: true });
+    const friends = await s.getFriends("+1");
+    expect(friends).toHaveLength(1);
+    expect(friends[0]).toEqual({ name: "Samuel", phone: "+2", is_emergency: true });
+  });
+
   it("caps the conversation buffer at 20", async () => {
     const s = new MemoryStore();
     for (let i = 0; i < 25; i++) await s.appendConversation("+1", { role: "user", content: String(i) });

@@ -58,7 +58,8 @@ export const TOOLS = [
         destination: { type: "string" },
         confirm: {
           type: "boolean",
-          description: "false = just quote the price/ETA so you can ask them; true = they approved, book it now",
+          description:
+            "false = you have NOT quoted yet: pull a price/ETA to show them. true = you ALREADY quoted and they just approved (any yes — 'yeah', 'do it', 'book it'): book it now. If they're saying yes to a quote you gave, you MUST pass true.",
         },
       },
       required: ["destination"],
@@ -74,7 +75,8 @@ export const TOOLS = [
         query: { type: "string", description: "what they want, e.g. 'a big greasy burger' or 'pad thai'" },
         confirm: {
           type: "boolean",
-          description: "false = just quote the total/ETA so you can ask them; true = they approved, place the order",
+          description:
+            "false = you have NOT quoted yet: build the cart and pull a total/ETA to show them. true = you ALREADY quoted and they just approved (any yes — 'yeah', 'do it', 'order it'): place the order now. If they're saying yes to a quote you gave, you MUST pass true.",
         },
       },
       required: ["query"],

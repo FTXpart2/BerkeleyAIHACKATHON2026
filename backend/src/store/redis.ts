@@ -7,7 +7,7 @@ import type {
   MemoryItem,
   ChatMessage,
 } from "@drunk-buddy/shared";
-import { type Store, VITALS_CAP, CONVO_CAP } from "./store";
+import { type Store, VITALS_CAP, CONVO_CAP, upsertFriend } from "./store";
 
 // Redis-backed Store. Keys follow the data model in CLAUDE.md / PLAN.md (§5).
 export class RedisStore implements Store {
@@ -37,7 +37,7 @@ export class RedisStore implements Store {
   }
   async addFriend(phone: string, friend: Friend) {
     const arr = await this.getFriends(phone);
-    arr.push(friend);
+    upsertFriend(arr, friend);
     await this.setJson(`friends:${phone}`, arr);
   }
 
