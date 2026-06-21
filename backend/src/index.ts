@@ -95,6 +95,20 @@ const guardian = createGuardian({
 const stt = createStt(config.deepgramApiKey);
 const tts = createTts(config.deepgramApiKey, config.ttsModel);
 
+// Send a reply as one or more iMessage bubbles — split on blank lines so the buddy
+// can rapid-fire a few short texts like a real friend instead of one wall of text.
+async function sendReply(chatGuid: string, reply: string): Promise<void> {
+  const bubbles = reply
+    .split(/\n\s*\n+/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+  const parts = bubbles.length ? bubbles : [reply];
+  for (let i = 0; i < parts.length; i++) {
+    await channel.sendText(chatGuid, parts[i]);
+    if (i < parts.length - 1) await new Promise((r) => setTimeout(r, 900)); // beat between texts
+  }
+}
+
 channel.onMessage(async (msg) => {
   await store.setChatGuid(msg.phone, msg.chatGuid);
   // They shared a "Send My Current Location" pin → store it as their live pickup,
@@ -106,7 +120,7 @@ channel.onMessage(async (msg) => {
       { phone: msg.phone, text: "(i just shared my current location with you)" },
       deps,
     );
-    if (reply) await channel.sendText(msg.chatGuid, reply);
+    if (reply) await sendReply(msg.chatGuid, reply);
     return;
   }
 
@@ -145,7 +159,7 @@ channel.onMessage(async (msg) => {
       }
     }
   }
-  await channel.sendText(msg.chatGuid, reply);
+  await sendReply(msg.chatGuid, reply);
 });
 
 const app = express();
