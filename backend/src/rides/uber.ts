@@ -56,8 +56,13 @@ export async function bookUber(
     env: "BROWSERBASE",
     apiKey: config.browserbase.apiKey,
     projectId: config.browserbase.projectId,
-    // reuse our own Anthropic key as Stagehand's planner brain:
-    model: { modelName: "anthropic/claude-sonnet-4-6", apiKey: config.anthropicApiKey },
+    // Stagehand's planner brain. We only use extract() (which parses fine on
+    // 4.x); act() is avoided because Stagehand 3.6's SDK can't parse 4.x
+    // structured output, and older Claudes are retired.
+    model: {
+      modelName: process.env.STAGEHAND_MODEL ?? "anthropic/claude-sonnet-4-6",
+      apiKey: config.anthropicApiKey,
+    },
     // reuse the persisted, logged-in Uber session so we skip OTP:
     browserbaseSessionCreateParams: {
       projectId: config.browserbase.projectId,
@@ -69,10 +74,14 @@ export async function bookUber(
 
   try {
     await stagehand.init();
-    await stagehand.context.newPage("https://m.uber.com/go/home");
+    // Navigate straight to the pre-filled deep link — Uber sets pickup + dropoff
+    // from the URL itself, so we skip the flaky act()-driven form filling and
+    // land directly on the ride-options screen with prices.
+    await stagehand.context.newPage(link);
+    await new Promise((r) => setTimeout(r, 8000)); // let Uber render the options
 
     const auth = await stagehand.extract(
-      "is the user signed in and able to request a ride (NOT on a login/OTP screen)?",
+      "is the user signed in and seeing ride options/prices (NOT a login/OTP screen)?",
       z.object({ signedIn: z.boolean() }),
     );
     if (!auth.signedIn) {
@@ -80,31 +89,27 @@ export async function bookUber(
       return { ok: true, booked: false, link, note: "uber not logged in — deep link fallback" };
     }
 
-    // Step through atomically: autocomplete needs an explicit suggestion pick
-    // (just typing leaves the field unresolved → no route → no price), and
-    // prices only render after "Search".
-    if (pickup) {
-      await stagehand.act(`click the pickup location input field`);
-      await stagehand.act(`type "${pickup}" into the focused location field`);
-      await stagehand.act(`click the first address suggestion in the dropdown`);
-    }
-    await stagehand.act(`click the dropoff location input field`);
-    await stagehand.act(`type "${destination}" into the focused location field`);
-    await stagehand.act(`click the first address suggestion in the dropdown`);
-    await stagehand.act(`click the "Search" button to see ride options`);
-    await stagehand.act(`select the standard UberX option from the ride list`);
-
+    // extract() parses fine on 4.x (unlike act()), so read the price directly.
     const quote = await stagehand.extract(
-      "read the price (e.g. $14.20) and pickup ETA (e.g. 4 min) for the selected UberX; empty string if not visible",
+      "from the ride options on screen, read the total price (e.g. $18.40) and the pickup ETA in minutes (e.g. 6 min) for the standard UberX. empty string for anything not visible.",
       z.object({ eta: z.string(), price: z.string() }),
     );
     const price = clean(quote.price);
     const eta = clean(quote.eta);
 
+    // Booking is one deterministic Playwright click (act() is unusable on 4.x).
     let booked = false;
     if (confirm && BOOK_FOR_REAL && price) {
-      await stagehand.act("confirm and request the UberX");
-      booked = true;
+      try {
+        const page: any = (stagehand as any).page;
+        await page
+          .getByRole("button", { name: /request|confirm|choose uberx|book/i })
+          .first()
+          .click({ timeout: 9000 });
+        booked = true;
+      } catch (e) {
+        log("ride.book_click_failed", { err: String(e) });
+      }
     }
 
     log("ride.quote", { destination, eta, price, booked });
