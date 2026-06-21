@@ -14,6 +14,12 @@ export interface Config {
     method: "apple-script" | "private-api";
   };
   publicUrl?: string;
+  // The Token Company: wraps the Anthropic SDK to ML-compress the system prompt +
+  // non-assistant messages before each call (brief §9). When compressionApiKey is
+  // set we wrap the client with `withCompression`; otherwise plain Anthropic.
+  tokenCompany: {
+    compressionApiKey?: string;
+  };
   healthLinkSecret: string;
   guardian: {
     hrLow: number;
@@ -35,6 +41,9 @@ export const config: Config = {
     method: process.env.BLUEBUBBLES_METHOD === "private-api" ? "private-api" : "apple-script",
   },
   publicUrl: process.env.PUBLIC_URL,
+  tokenCompany: {
+    compressionApiKey: process.env.TOKEN_COMPANY_API_KEY || undefined,
+  },
   healthLinkSecret: process.env.HEALTH_LINK_SECRET || "dev-insecure-health-secret",
   guardian: {
     hrLow: Number(process.env.HR_LOW ?? 45),

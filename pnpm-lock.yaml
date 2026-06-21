@@ -44,6 +44,9 @@ importers:
       ioredis:
         specifier: ^5.4.1
         version: 5.11.1
+      the-token-company:
+        specifier: ^0.3.2
+        version: 0.3.2(@anthropic-ai/sdk@0.105.0)
 
   channel:
     dependencies:
@@ -886,6 +889,20 @@ packages:
 
   std-env@4.1.0:
     resolution: {integrity: sha512-Rq7ybcX2RuC55r9oaPVEW7/xu3tj8u4GeBYHBWCychFtzMIr86A7e3PPEBPT37sHStKX3+TiX/Fr/ACmJLVlLQ==}
+
+  the-token-company@0.3.2:
+    resolution: {integrity: sha512-xg9rLqnfwsXni0Qdp1xxFzlV+yPAk1z/nJlkodEjfJTSf1+IPHCuVaNhC7eqz1ZsAmn0WmuH6s/G8LJip39Suw==}
+    peerDependencies:
+      '@anthropic-ai/sdk': '>=0.30.0'
+      ai: '>=4.0.0'
+      openai: '>=4.0.0'
+    peerDependenciesMeta:
+      '@anthropic-ai/sdk':
+        optional: true
+      ai:
+        optional: true
+      openai:
+        optional: true
 
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
@@ -1782,6 +1799,10 @@ snapshots:
   statuses@2.0.2: {}
 
   std-env@4.1.0: {}
+
+  the-token-company@0.3.2(@anthropic-ai/sdk@0.105.0):
+    optionalDependencies:
+      '@anthropic-ai/sdk': 0.105.0
 
   tinybench@2.9.0: {}
 

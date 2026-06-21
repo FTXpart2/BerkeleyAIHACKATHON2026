@@ -166,3 +166,35 @@ app), or "Find Health Samples" returns nothing.
   Set `REDIS_URL` to persist across restarts for a multi-user demo.
 - **Token from another machine** — only verifies against the server whose
   `HEALTH_LINK_SECRET` signed it. Always let the buddy generate the link.
+
+---
+
+## Separate setup you also own: The Token Company (prompt compression)
+
+Unrelated to Apple Health, but it's your server, so it's your key to add. The agent
+can route Claude calls through The Token Company, which ML-compresses the system
+prompt + user messages before each call (cheaper/faster). It's **off unless you set a
+key**, and **I could not fully verify it** because it needs a real `ttc-...` key I
+don't have. Action for you:
+
+1. Get a compression key (`ttc-...`) from the Token Company dashboard.
+2. Add it to `.env` (the Anthropic key is still used for the actual call):
+   ```
+   ANTHROPIC_API_KEY=sk-ant-...
+   TOKEN_COMPANY_API_KEY=ttc-...
+   ```
+3. Restart the server. On boot the log should read `llm.compress {"via":"token-company"}`
+   instead of `llm.anthropic`. If it still says `llm.anthropic`, the key isn't being
+   picked up.
+4. Send one message through the buddy and confirm a normal reply. If it errors, the key
+   is the likely cause — the wiring matches their official Node sample
+   (`withCompression(new Anthropic(), { compressionApiKey })` from
+   `the-token-company/anthropic`), so a valid key should just work.
+
+Notes:
+- The dependency `the-token-company` is already installed (in `backend`); no install
+  step needed.
+- Leave `TOKEN_COMPANY_API_KEY` unset to disable compression entirely — the agent falls
+  back to calling Anthropic directly. Nothing else changes.
+- It's a pure add-on to the LLM call; it does not touch the Apple Health / guardian flow
+  above.

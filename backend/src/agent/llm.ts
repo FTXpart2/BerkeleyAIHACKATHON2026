@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { withCompression } from "the-token-company/anthropic";
 import type { Config } from "../config";
 import { log } from "../log";
 import { TOOLS } from "./tools";
@@ -25,8 +26,12 @@ export class AnthropicLlm implements Llm {
   constructor(
     apiKey: string,
     readonly model: string,
+    compressionApiKey?: string,
   ) {
-    this.client = new Anthropic({ apiKey });
+    const base = new Anthropic({ apiKey });
+    // compressionApiKey set => wrap with The Token Company, which ML-compresses
+    // the system prompt + non-assistant messages before each call to Anthropic.
+    this.client = compressionApiKey ? withCompression(base, { compressionApiKey }) : base;
   }
 
   async createMessage({ system, messages }: LlmArgs): Promise<LlmResponse> {
@@ -42,9 +47,11 @@ export class AnthropicLlm implements Llm {
 }
 
 export function createLlm(config: Config): Llm {
+  const compress = config.tokenCompany.compressionApiKey;
   if (config.anthropicApiKey) {
-    log("llm.anthropic", { model: config.model });
-    return new AnthropicLlm(config.anthropicApiKey, config.model);
+    if (compress) log("llm.compress", { via: "token-company", model: config.model });
+    else log("llm.anthropic", { model: config.model });
+    return new AnthropicLlm(config.anthropicApiKey, config.model, compress);
   }
   log("llm.mock", { reason: "no ANTHROPIC_API_KEY — using scripted stand-in" });
   return new MockLlm();
