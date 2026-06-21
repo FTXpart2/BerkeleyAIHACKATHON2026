@@ -122,8 +122,10 @@ channel.onMessage(async (msg) => {
   const reply = await handleInbound({ phone: msg.phone, text }, deps);
   if (!reply) return;
 
-  // Reply in kind: voice note in -> spoken reply out (fall back to text).
-  if (viaVoice) {
+  // Reply as TEXT by default — a tap-to-play .mp3 attachment in iMessage is clunky,
+  // and native waveform voice bubbles need .caf via the Private API (unreliable on
+  // macOS 26). Opt into a spoken Aura reply with VOICE_REPLY=audio.
+  if (viaVoice && process.env.VOICE_REPLY === "audio") {
     const mp3 = await tts.synthesize(reply);
     if (mp3) {
       await channel.sendAudio(msg.chatGuid, mp3);
