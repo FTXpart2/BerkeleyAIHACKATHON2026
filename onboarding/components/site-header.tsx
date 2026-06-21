@@ -1,0 +1,43 @@
+import Link from "next/link"
+import { Beer } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { messageBuddyHref } from "@/lib/buddy"
+
+const nav = [
+  { label: "How it works", href: "#how" },
+  { label: "What it does", href: "#features" },
+  { label: "Safety", href: "#safety" },
+]
+
+export function SiteHeader() {
+  return (
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/70 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <Link href="#" className="flex items-center gap-2">
+          <span className="flex size-8 -rotate-12 items-center justify-center rounded-full bg-foreground text-background transition-transform hover:rotate-0">
+            <Beer className="size-4" />
+          </span>
+          <span className="text-xl font-semibold tracking-tight">Drunk Buddy</span>
+        </Link>
+
+        <nav aria-label="Primary" className="hidden items-center gap-7 md:flex">
+          {nav.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <Button render={<a href={messageBuddyHref} />} nativeButton={false} className="rounded-full px-5">
+            Message Drunk Buddy
+          </Button>
+        </div>
+      </div>
+    </header>
+  )
+}
