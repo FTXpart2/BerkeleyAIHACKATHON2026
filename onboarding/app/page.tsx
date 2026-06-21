@@ -6,6 +6,7 @@ import { HowItWorks } from "@/components/how-it-works"
 import { SafetySection } from "@/components/safety-section"
 import { Pricing } from "@/components/pricing"
 import { FinalCta, SiteFooter } from "@/components/cta-footer"
+import GradualBlur from "@/components/GradualBlur"
 
 export default function Page() {
   return (
@@ -21,6 +22,18 @@ export default function Page() {
         <FinalCta />
       </main>
       <SiteFooter />
+
+      {/* progressive blur pinned to the bottom of the viewport — content softly
+          blurs as it scrolls down past the edge */}
+      <GradualBlur
+        target="page"
+        position="bottom"
+        height="7rem"
+        strength={2.5}
+        divCount={8}
+        curve="bezier"
+        exponential
+      />
     </div>
   )
 }
